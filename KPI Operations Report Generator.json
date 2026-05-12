@@ -1,0 +1,179 @@
+{
+  "name": "KPI Operations Report Generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bff8fb69-5085-4d9c-bca5-7da9c335849a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1TAjsIthEf36wpgh-o--qMkvV2kpBZO2udSSbBDDshFc/edit?pli=1&gid=2058852804#gid=2058852804",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2058852804,
+          "mode": "list",
+          "cachedResultName": "kpi_operations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TAjsIthEf36wpgh-o--qMkvV2kpBZO2udSSbBDDshFc/edit#gid=2058852804"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f2088a88-a633-4a60-adaa-892048a7bfb2",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nQ38poIsekYfwniT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d7b4f69f-d1b7-45be-ad47-2ae9d17a5f93",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert business analyst. Below is monthly operational KPI data for 2026.\n\nAnalyze the data and generate a professional executive report in clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> and <hr> tags. Do not use Markdown.\n\nThe report must include:\n1. Executive Summary (3-4 sentences overview of the year)\n2. Top Performing Months (best 3 months and why)\n3. Critical Issues Detected (worst months, anomalies, red flags)\n4. KPI Trends Analysis (Revenue vs Target, Orders, Customer Satisfaction, On-Time Delivery)\n5. Actionable Recommendations (3-5 concrete actions based on the data)\n\nKPI Data:\n{{ $json.data.map(row => Object.entries(row).map(([k,v]) => k + ': ' + v).join(' | ')).join('\\n') }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "60cfe11c-70b6-48cc-b2a2-1d3d376854ae",
+      "name": "Message a model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "UfbHUnXg72lrQWNO",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "fjcastro.dev@gmail.com",
+        "subject": "=📊 KPI Operations Report 2026 - {{ $now.format('dd/MM/yyyy') }}",
+        "message": "={{ $json.content[0].text.replace(/``html\\n?/g, '').replace(/\\`/g, '') }}`",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "02ec1e6f-437f-4006-80f1-1262dfeb5b40",
+      "name": "Send a message",
+      "webhookId": "d3fd44ed-5663-48d5-ac11-07edb3129648",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "r4GeWxntOwGhBw3b",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a62b2ecd-4095-43d2-8cc1-b1af522f2a5e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bb8023c0d680f777bd04173a7ef8dad8cbcd1198cc1a2d9f3256c079e9a3a50f"
+  },
+  "id": "ILuMWLAmvsAwHzuo",
+  "tags": []
+}
